@@ -73,3 +73,136 @@ void contarBits(const string &bloque, int &unos, int &ceros) {
     for (char b : bloque)
         (b == '1') ? unos++ : ceros++;
 }
+// MÉTODO 1 DE CODIFICACIÓN Y DECODIFICACIÓN
+string metodo1Codificar(const string &bits, int n) {
+    string resultado = "";
+    string anterior = "";
+
+    for (size_t i = 0; i < bits.size(); i += n) {
+        string bloque = bits.substr(i, n);
+        while (bloque.size() < (size_t)n) bloque += '0';
+
+        string codificado;
+        if (i == 0) {
+            codificado = invertirBits(bloque);
+        } else {
+            int unos, ceros;
+            contarBits(anterior, unos, ceros);
+            if (unos == ceros) codificado = invertirBits(bloque);
+            else if (ceros > unos) codificado = invertirCadaK(bloque, 2);
+            else codificado = invertirCadaK(bloque, 3);
+        }
+        resultado += codificado;
+        anterior = bloque;
+    }
+    return resultado;
+}
+
+string metodo1Decodificar(const string &bits, int n) {
+    string resultado = "";
+    string anterior = "";
+
+    for (size_t i = 0; i < bits.size(); i += n) {
+        string bloqueCod = bits.substr(i, n);
+        while (bloqueCod.size() < (size_t)n) bloqueCod += '0';
+
+        string bloqueDec;
+        if (i == 0) {
+            bloqueDec = invertirBits(bloqueCod);
+        } else {
+            int unos, ceros;
+            contarBits(anterior, unos, ceros);
+            if (unos == ceros) bloqueDec = invertirBits(bloqueCod);
+            else if (ceros > unos) bloqueDec = invertirCadaK(bloqueCod, 2);
+            else bloqueDec = invertirCadaK(bloqueCod, 3);
+        }
+        resultado += bloqueDec;
+        anterior = bloqueDec;
+    }
+    return resultado;
+}
+
+// MÉTODO 2 DE CODIFICACIÓN Y DECODIFICACIÓN
+string metodo2Codificar(const string &bits, int n) {
+    string resultado = "";
+    for (size_t i = 0; i < bits.size(); i += n) {
+        string bloque = bits.substr(i, n);
+        while (bloque.size() < (size_t)n) bloque += '0';
+        resultado += rotarDerecha(bloque);
+    }
+    return resultado;
+}
+
+string metodo2Decodificar(const string &bits, int n) {
+    string resultado = "";
+    for (size_t i = 0; i < bits.size(); i += n) {
+        string bloque = bits.substr(i, n);
+        while (bloque.size() < (size_t)n) bloque += '0';
+        resultado += rotarIzquierda(bloque);
+    }
+    return resultado;
+}
+
+void codificarArchivo() {
+    string entrada, salida;
+    int metodo, n;
+
+    cout << "Nombre del archivo de entrada (texto): ";
+    cin >> entrada;
+    cout << "Nombre del archivo de salida (bits): ";
+    cin >> salida;
+    cout << "Semilla n: ";
+    cin >> n;
+    cout << "Metodo (1 o 2): ";
+    cin >> metodo;
+
+    ifstream in(entrada);
+    if (!in.is_open()) {
+        cout << "Error: No se puede abrir el archivo.\n";
+        return;
+    }
+
+    string texto((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
+    in.close();
+
+    string bits = textoABinario(texto);
+    string codificado = (metodo == 1) ? metodo1Codificar(bits, n) : metodo2Codificar(bits, n);
+
+    ofstream out(salida);
+    out << codificado;
+    out.close();
+    cout << "Archivo codificado correctamente.\n";
+}
+
+void decodificarArchivo() {
+    string entrada, salida;
+    int metodo, n;
+
+    cout << "Archivo codificado (bits): ";
+    cin >> entrada;
+    cout << "Archivo de salida (texto): ";
+    cin >> salida;
+    cout << "Semilla n: ";
+    cin >> n;
+    cout << "Metodo (1 o 2): ";
+    cin >> metodo;
+
+    ifstream in(entrada);
+    if (!in.is_open()) {
+        cout << "Error: No se puede abrir el archivo.\n";
+        return;
+    }
+
+    string bits((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
+    in.close();
+
+    string decodificado = (metodo == 1) ? metodo1Decodificar(bits, n) : metodo2Decodificar(bits, n);
+    string texto = binarioATexto(decodificado);
+
+    ofstream out(salida, ios::binary);
+    out << texto;
+    out.close();
+    cout << "Archivo decodificado correctamente.\n";
+}
+
+
