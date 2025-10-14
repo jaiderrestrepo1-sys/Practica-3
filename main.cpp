@@ -205,4 +205,129 @@ void decodificarArchivo() {
     cout << "Archivo decodificado correctamente.\n";
 }
 
+// CAJERO AUTOMÁTICO 
+
+struct Usuario {
+    string cedula;
+    string clave;
+    int saldo;
+};
+
+// Valida administrador desde sudo.txt
+bool loginAdmin() {
+    ifstream sudo("sudo.txt");
+    if (!sudo.is_open()) {
+        cout << "No existe sudo.txt\n";
+        return false;
+    }
+    string claveGuardada;
+    getline(sudo, claveGuardada);
+    sudo.close();
+
+    string clave;
+    cout << "Ingrese clave admin: ";
+    cin >> clave;
+    return clave == claveGuardada;
+}
+
+// Registrar usuario
+void registrarUsuario() {
+    if (!loginAdmin()) {
+        cout << "Clave incorrecta.\n";
+        return;
+    }
+
+    Usuario u;
+    cout << "Cedula: "; cin >> u.cedula;
+    cout << "Clave: "; cin >> u.clave;
+    cout << "Saldo inicial: "; cin >> u.saldo;
+
+    ofstream out("usuarios.txt", ios::app);
+    out << u.cedula << "," << u.clave << "," << u.saldo << "\n";
+    out.close();
+    cout << "Usuario registrado correctamente.\n";
+}
+
+// Modo usuario
+void modoUsuario() {
+    string ced, clave;
+    cout << "Cedula: "; cin >> ced;
+    cout << "Clave: "; cin >> clave;
+
+    ifstream in("usuarios.txt");
+    if (!in.is_open()) {
+        cout << "No existe usuarios.txt\n";
+        return;
+    }
+
+    string linea, nuevoContenido = "";
+    bool encontrado = false;
+    while (getline(in, linea)) {
+        size_t p1 = linea.find(',');
+        size_t p2 = linea.find(',', p1 + 1);
+        if (p1 == string::npos || p2 == string::npos) continue;
+
+        string c = linea.substr(0, p1);
+        string k = linea.substr(p1 + 1, p2 - p1 - 1);
+        int saldo = stoi(linea.substr(p2 + 1));
+
+        if (c == ced && k == clave) {
+            encontrado = true;
+            int opcion;
+            do {
+                cout << "\n1. Consultar saldo (costo 1000)\n2. Retirar dinero\n0. Salir\nOpcion: ";
+                cin >> opcion;
+
+                if (opcion == 1) {
+                    if (saldo >= 1000) saldo -= 1000;
+                    cout << "Saldo actual: " << saldo << " COP\n";
+                } else if (opcion == 2) {
+                    int retiro;
+                    cout << "Valor a retirar: ";
+                    cin >> retiro;
+                    if (retiro + 1000 > saldo) cout << "Saldo insuficiente.\n";
+                    else {
+                        saldo -= retiro + 1000;
+                        cout << "Retiro exitoso. Nuevo saldo: " << saldo << " COP\n";
+                    }
+                }
+            } while (opcion != 0);
+        }
+        nuevoContenido += c + "," + k + "," + to_string(saldo) + "\n";
+    }
+    in.close();
+
+    ofstream out("usuarios.txt");
+    out << nuevoContenido;
+    out.close();
+
+    if (!encontrado) cout << "Usuario o clave incorrectos.\n";
+}
+
+// MENÚ PRINCIPAL
+int main() {
+    int opcion;
+    do {
+        cout << "\n=========== PRACTICA 3 ===========\n";
+        cout << "1. Codificar archivo\n";
+        cout << "2. Decodificar archivo\n";
+        cout << "3. Registrar usuario (admin)\n";
+        cout << "4. Acceso usuario cajero\n";
+        cout << "0. Salir\n";
+        cout << "Seleccione una opcion: ";
+        cin >> opcion;
+
+        switch (opcion) {
+        case 1: codificarArchivo(); break;
+        case 2: decodificarArchivo(); break;
+        case 3: registrarUsuario(); break;
+        case 4: modoUsuario(); break;
+        case 0: cout << "Saliendo...\n"; break;
+        default: cout << "Opcion invalida.\n";
+        }
+    } while (opcion != 0);
+
+    return 0;
+}
+
 
